@@ -1,6 +1,6 @@
 import json
 from typing import Dict, List
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, File, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -58,4 +58,11 @@ async def request_classification(request: Request):
             "image_id": image_id,
             "classification_scores": json.dumps(classification_scores),
         },
+    )
+
+@app.get("/classifications_upload")
+def create_classify_upload(request: Request):
+    return templates.TemplateResponse(
+        "classification_upload.html",
+        {"request": request, "models": Configuration.models},
     )
