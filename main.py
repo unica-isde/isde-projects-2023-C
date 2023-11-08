@@ -63,6 +63,8 @@ async def request_classification(request: Request):
 
 @app.get("/classifications_upload")
 def create_classify_upload(request: Request):
+    """ Returns a form which enables the user to upload an JPEG/JPG image to be classified."""
+
     return templates.TemplateResponse(
         "classification_upload.html",
         {"request": request, "models": Configuration.models},
@@ -71,6 +73,11 @@ def create_classify_upload(request: Request):
 
 @app.post("/classifications_upload")
 async def request_classification_upload(request: Request):
+    """
+    Handles the HTTP POST form request which enables the user to upload an JPEG/JPG image to be classified.
+    If errors occur, the page will reload to show them.
+    """
+
     form = ClassificationFormUpload(request)
     await form.load_data()
 
