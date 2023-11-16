@@ -4,6 +4,7 @@ import starlette.datastructures
 from fastapi import Request, UploadFile
 
 from app.config import Configuration
+from app.utils import save_image
 
 
 # https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
@@ -24,8 +25,8 @@ class ClassificationFormUpload:
     def is_valid(self):
         # FastAPI bug https://github.com/tiangolo/fastapi/discussions/9705
         if not self.image_file or not isinstance(self.image_file, starlette.datastructures.UploadFile) \
-                or not self.image_file.filename.upper().endswith((".JPEG", ".JPG")):
-            self.errors.append("A valid JPEG image is required")
+                or not self.image_file.filename.endswith(".JPEG"):  # utils.list_images() accepts only '.JPEG' extension
+            self.errors.append("A valid .JPEG image is required (check file extension, it must be uppercase too!)")
         if not self.image_id or not isinstance(self.image_id, str):
             self.errors.append("A valid image filename is required")
         if not self.model_id or not isinstance(self.model_id, str):
@@ -43,7 +44,4 @@ class ClassificationFormUpload:
         # We can check if filename already exists, but it would negatively impact performance with a big number of
         # pre-existing images.
         # We can just re-write the old image for now.
-
-        with open(Configuration.image_folder_path + "/" + self.image_id, mode='wb') as f:
-            await self.image_file.seek(0)  # wait to seek file cursor at the start of the tempfile
-            f.write(await self.image_file.read())  # read all the tempfile at once and save it as a permanent file,
+        await save_image(self.image_file)
