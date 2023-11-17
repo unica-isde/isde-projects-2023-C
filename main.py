@@ -1,6 +1,6 @@
 import json
 from typing import Dict, List
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, File, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -9,9 +9,9 @@ from rq import Connection, Queue
 from rq.job import Job
 from app.config import Configuration
 from app.forms.classification_form import ClassificationForm
+from app.forms.classification_form_upload import ClassificationFormUpload
 from app.ml.classification_utils import classify_image
 from app.utils import list_images
-
 
 app = FastAPI()
 config = Configuration()
@@ -59,3 +59,45 @@ async def request_classification(request: Request):
             "classification_scores": json.dumps(classification_scores),
         },
     )
+
+
+@app.get("/classifications_upload")
+def create_classify_upload(request: Request):
+    """ Returns a form which enables the user to upload an JPEG/JPG image to be classified."""
+
+    return templates.TemplateResponse(
+        "classification_upload.html",
+        {"request": request, "models": Configuration.models},
+    )
+
+
+@app.post("/classifications_upload")
+async def request_classification_upload(request: Request):
+    """
+    Handles the HTTP POST form request which enables the user to upload an JPEG/JPG image to be classified.
+    If errors occur, the page will reload to show them.
+    """
+
+    form = ClassificationFormUpload(request)
+    await form.load_data()
+
+    if form.is_valid():
+        model_id = form.model_id
+        image_id = form.image_id
+
+        await form.save_image()  # save image before classifying it!
+
+        classification_scores = classify_image(model_id=model_id, img_id=image_id)
+        return templates.TemplateResponse(
+            "classification_output.html",
+            {
+                "request": request,
+                "image_id": image_id,
+                "classification_scores": json.dumps(classification_scores),
+            },
+        )
+    else:
+        return templates.TemplateResponse(
+            "classification_upload.html",
+            {"request": request, "models": Configuration.models, "errors":form.errors},
+        )
