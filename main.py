@@ -59,3 +59,27 @@ async def request_classification(request: Request):
             "classification_scores": json.dumps(classification_scores),
         },
     )
+
+@app.get("/histogram")
+def create_histogram(request: Request):
+    return templates.TemplateResponse(
+        "histogram_select.html",
+        {"request": request, "images": list_images()},
+    )
+
+
+@app.post("/histogram")
+async def request_histogram(request: Request):
+    form = ClassificationForm(request)
+    await form.load_data()
+    image_id = form.image_id
+    model_id = form.model_id
+    classification_scores = classify_image(model_id=model_id, img_id=image_id)
+    return templates.TemplateResponse(
+        "classification_output.html",
+        {
+            "request": request,
+            "image_id": image_id,
+            "classification_scores": json.dumps(classification_scores),
+        },
+    )
