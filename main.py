@@ -73,13 +73,10 @@ async def request_histogram(request: Request):
     form = ClassificationForm(request)
     await form.load_data()
     image_id = form.image_id
-    model_id = form.model_id
-    classification_scores = classify_image(model_id=model_id, img_id=image_id)
     return templates.TemplateResponse(
-        "classification_output.html",
+        "histogram_output.html",
         {
             "request": request,
             "image_id": image_id,
-            "classification_scores": json.dumps(classification_scores),
         },
     )
