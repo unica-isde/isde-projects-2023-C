@@ -1,17 +1,17 @@
 import json
+from io import BytesIO
 from typing import Dict, List
+from urllib.parse import unquote
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import redis
-from rq import Connection, Queue
-from rq.job import Job
+from PIL import Image, ImageDraw
+
 from app.config import Configuration
 from app.forms.classification_form import ClassificationForm
 from app.ml.classification_utils import classify_image
 from app.utils import list_images
-
 
 app = FastAPI()
 config = Configuration()
@@ -58,4 +58,23 @@ async def request_classification(request: Request):
             "image_id": image_id,
             "classification_scores": json.dumps(classification_scores),
         },
+    )
+
+
+@app.get("/download_results/{image_id}")
+def download_results(image_id: str, classification_scores: str):
+    classification_scores_dict = json.loads(classification_scores)
+    json_content = json.dumps(classification_scores_dict, indent=4)
+
+    # Jason file streaming
+    def generate():
+        yield json_content.encode()
+
+    filename = f"{image_id}_results.json"
+
+    # Return a StreamingResponse
+    return StreamingResponse(
+        generate(),
+        media_type="application/json",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
