@@ -10,8 +10,11 @@ from rq.job import Job
 from app.config import Configuration
 from app.forms.classification_form import ClassificationForm
 from app.forms.classification_form_upload import ClassificationFormUpload
-from app.ml.classification_utils import classify_image
+from app.forms.transform_image_form import TransformImageForm
+from app.ml.classification_utils import classify_image, fetch_image
 from app.utils import list_images
+from app.image_transform import TransformWrapper
+import base64, os
 
 app = FastAPI()
 config = Configuration()
@@ -51,6 +54,7 @@ async def request_classification(request: Request):
     image_id = form.image_id
     model_id = form.model_id
     classification_scores = classify_image(model_id=model_id, img_id=image_id)
+
     return templates.TemplateResponse(
         "classification_output.html",
         {
@@ -100,4 +104,40 @@ async def request_classification_upload(request: Request):
         return templates.TemplateResponse(
             "classification_upload.html",
             {"request": request, "models": Configuration.models, "errors":form.errors},
+        )
+
+
+@app.get("/transform_image")
+def transform(request: Request):
+    """
+    Returns a form to enable the user to apply the available transformations in separate module
+    """
+    return templates.TemplateResponse(
+        "transform_image.html",
+        {"request": request, "images": list_images(), "transforms": TransformWrapper().get_transforms},
+    )
+
+
+
+@app.post("/transform_image")
+async def transform_image(request: Request):
+    """
+    Handles the POST request to transform the image based on the wrapper class.
+    """
+    form = TransformImageForm(request)
+    await form.load_data()
+    image_id = form.image_id
+    transforms = form.transforms
+
+    if form.is_valid():
+        #apply transformations only if the form is valid
+        img = fetch_image(image_id)
+        img = TransformWrapper().apply_transform(img, transforms)
+
+        return templates.TemplateResponse(
+            "transform_image_output.html",
+            {
+                "request": request,
+                "image_id": image_id
+            },
         )
