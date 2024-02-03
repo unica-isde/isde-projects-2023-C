@@ -101,3 +101,24 @@ async def request_classification_upload(request: Request):
             "classification_upload.html",
             {"request": request, "models": Configuration.models, "errors":form.errors},
         )
+
+@app.get("/histogram")
+def create_histogram(request: Request):
+    return templates.TemplateResponse(
+        "histogram_select.html",
+        {"request": request, "images": list_images()},
+    )
+
+
+@app.post("/histogram")
+async def request_histogram(request: Request):
+    form = ClassificationForm(request)
+    await form.load_data()
+    image_id = form.image_id
+    return templates.TemplateResponse(
+        "histogram_output.html",
+        {
+            "request": request,
+            "image_id": image_id,
+        },
+    )
