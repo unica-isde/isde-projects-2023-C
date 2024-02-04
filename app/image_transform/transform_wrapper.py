@@ -1,12 +1,13 @@
 from PIL import ImageEnhance, Image
 
 
-class TransformWrapper():
+class TransformWrapper:
     """
     Wrapper class which enables the user to apply transformations.
     Default values use ImageEnhance
     """
-    def set_transform_type(self, fun, name="name", min=0.0, max=2.0, default=1.0):
+    @staticmethod
+    def set_transform_type(fun, name="name", min=0.0, max=2.0, default=1.0):
         """
         Returns a dictionary item for the _transform attribute
         """
@@ -20,36 +21,32 @@ class TransformWrapper():
         }
 
     def __init__(self):
-        self._transform = {}
-        self._transform.update(self.set_transform_type(ImageEnhance.Color, "color"))
-        self._transform.update(self.set_transform_type(ImageEnhance.Contrast, "contrast"))
-        self._transform.update(self.set_transform_type(ImageEnhance.Brightness, "brightness"))
-        self._transform.update(self.set_transform_type(ImageEnhance.Sharpness, "sharpness"))
-
+        self._transforms = {}
+        self._transforms.update(self.set_transform_type(ImageEnhance.Color, "color"))
+        self._transforms.update(self.set_transform_type(ImageEnhance.Contrast, "contrast"))
+        self._transforms.update(self.set_transform_type(ImageEnhance.Brightness, "brightness"))
+        self._transforms.update(self.set_transform_type(ImageEnhance.Sharpness, "sharpness"))
 
     @property
-    def get_transforms(self):
-        return self._transform
+    def transforms(self):
+        return self._transforms
 
-    def get_transform_names(self):
-        return self._transform.keys()
-
-    def apply_single_transform(self, img, name: str, value: float):
+    def apply_single_transform(self, img: Image, name: str, value: float):
         """
         Apply a single transformation
         Input: img (PIL Image), name of the transformation, value of the transformation
         Output: PIL image
         """
-        transform = self._transform[name]['function']
+        transform = self._transforms[name]['function']
         if transform is None:
             raise NotImplementedError
 
-        if value == self._transform[name]['default']:
+        if value == self._transforms[name]['default']:
             return img
 
         return transform(img).enhance(value)
 
-    def apply_transform(self, img, transform: dict):
+    def apply_transform(self, img: Image, transform: dict):
         """
         Function that applies the transformations in batch.
         Input: img (PIL Image), dictionary of transformation (name and value needed)

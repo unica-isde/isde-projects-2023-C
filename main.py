@@ -114,7 +114,7 @@ def transform(request: Request):
     """
     return templates.TemplateResponse(
         "transform_image.html",
-        {"request": request, "images": list_images(), "transforms": TransformWrapper().get_transforms},
+        {"request": request, "images": list_images(), "transforms": TransformWrapper().transforms},
     )
 
 

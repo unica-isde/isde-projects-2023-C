@@ -13,18 +13,14 @@ class TransformImageForm:
     async def load_data(self):
         form = await self.request.form()
         self.image_id = form.get("image_id")
-        for t in TransformWrapper().get_transform_names():
+        for t in TransformWrapper().transforms:
             self.transforms.update({t: form.get(t)})
 
     def is_valid(self):
         if not self.transforms or not isinstance(self.transforms, dict):
             self.errors.append("A valid dictionary of transformations is required")
-        if self.transforms.keys() != TransformWrapper().get_transform_names():
-            self.errors.append("A valid transformation type is required")
         if not self.image_id or not isinstance(self.image_id, str):
             self.errors.append("A valid image id is required")
-        if not self.transforms or not isinstance(self.transforms, dict):
-            self.errors.append("A valid transformation dictionary is required")
         if not self.errors:
             return True
         return False
