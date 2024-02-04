@@ -1,12 +1,11 @@
+import io
 import json
+import matplotlib.pyplot as plot
 from typing import Dict, List
 from fastapi import FastAPI, Request, File, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import redis
-from rq import Connection, Queue
-from rq.job import Job
 from app.config import Configuration
 from app.forms.classification_form import ClassificationForm
 from app.forms.classification_form_upload import ClassificationFormUpload
@@ -122,3 +121,48 @@ async def request_histogram(request: Request):
             "image_id": image_id,
         },
     )
+
+@app.get("/download_results/{image_id}")
+def download_results(classification_scores: str):
+    classification_scores_dict = json.loads(classification_scores)
+    json_content = json.dumps(classification_scores_dict, indent=4)
+
+    # Json file streaming
+    def generate():
+        yield json_content.encode()
+
+    # Return a StreamingResponse
+    return StreamingResponse(
+        generate(),
+        media_type="application/json",
+        headers={"Content-Disposition": f"attachment"}
+    )
+
+
+@app.get("/download_plot/{image_id}")
+async def download_results(classification_scores: str):
+    classification_scores_dict = json.loads(classification_scores)
+
+    # Pick up the values for the plot
+    categories = [item[0] for item in classification_scores_dict]
+    values = [item[1] for item in classification_scores_dict]
+
+    # Graph creation
+    sorted_indices = sorted(range(len(values)), key=lambda k: values[k], reverse=False)
+    categories = [categories[i] for i in sorted_indices]
+    values = [values[i] for i in sorted_indices]
+    plot.figure(figsize=(10, len(categories) * 0.5))
+    plot.barh(categories, values, color=['#3F0355', '#06216C', '#795703', '#750014', '#1A4A04'])
+    plot.title('Output Scores')
+    plot.margins(y=0.01)
+    plot.tight_layout()
+    plot.grid(True)
+
+    # Save graph as png
+    image_stream = io.BytesIO()
+    plot.savefig(image_stream, format='png')
+    image_stream.seek(0)
+    plot.close()
+
+    # Return a StreamingResponse
+    return StreamingResponse(io.BytesIO(image_stream.read()), media_type="image/png")
