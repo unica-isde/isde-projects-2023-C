@@ -20,7 +20,7 @@
         <p>
             {%  for name, value in transforms.items() %}
                 <label for="{{name}}">{{ name }}</label>
-                <input type="range" name="{{ name }}" id="{{ name }}" min="{{ value.min }}" max="{{ value.max }}" value="{{ value.default }}" step="0.1">
+                <input type="range" name="{{ name }}" id="{{ name }}" min="{{ value.min }}" max="{{ value.max }}" value="{{ value.default }}" step="{{ value.step }}">
                 <br>
             {% endfor %}
 

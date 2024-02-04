@@ -7,7 +7,7 @@ class TransformWrapper:
     Default values use ImageEnhance
     """
     @staticmethod
-    def set_transform_type(fun, name="name", min=0.0, max=2.0, default=1.0):
+    def set_transform_type(fun, name="name", min=0.0, max=2.0, default=1.0, step=0.5):
         """
         Returns a dictionary item for the _transform attribute
         """
@@ -16,13 +16,14 @@ class TransformWrapper:
                 "function": fun,
                 "min": min,
                 "max": max,
-                "default": default
+                "default": default,
+                "step": step
             }
         }
 
     def __init__(self):
         self._transforms = {}
-        self._transforms.update(self.set_transform_type(ImageEnhance.Color, "color"))
+        self._transforms.update(self.set_transform_type(ImageEnhance.Color, "color", -100, 100, 5))
         self._transforms.update(self.set_transform_type(ImageEnhance.Contrast, "contrast"))
         self._transforms.update(self.set_transform_type(ImageEnhance.Brightness, "brightness"))
         self._transforms.update(self.set_transform_type(ImageEnhance.Sharpness, "sharpness"))
