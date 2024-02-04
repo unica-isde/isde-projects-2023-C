@@ -14,6 +14,7 @@ from app.forms.transform_image_form import TransformImageForm
 from app.ml.classification_utils import classify_image, fetch_image
 from app.utils import list_images
 from app.image_transform import TransformWrapper
+from io import BytesIO
 import base64, os
 
 app = FastAPI()
@@ -118,7 +119,6 @@ def transform(request: Request):
     )
 
 
-
 @app.post("/transform_image")
 async def transform_image(request: Request):
     """
@@ -130,14 +130,25 @@ async def transform_image(request: Request):
     transforms = form.transforms
 
     if form.is_valid():
-        #apply transformations only if the form is valid
+        # Apply transformations only if the form is valid
         img = fetch_image(image_id)
         img = TransformWrapper().apply_transform(img, transforms)
 
-        return templates.TemplateResponse(
+        # Convert image to base64
+        buff = BytesIO()
+        img.save(buff, format="JPEG")
+        image_b64 = base64.b64encode(buff.getvalue())
+        image_b64 = image_b64.decode("utf-8")
+
+        response = templates.TemplateResponse(
             "transform_image_output.html",
             {
                 "request": request,
-                "image_id": image_id
+                "image_id": image_id,
+                "image": image_b64
             },
         )
+
+        response.headers["cache-control"] = "no-store"
+        return response
+

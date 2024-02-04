@@ -7,7 +7,7 @@ class TransformWrapper:
     Default values use ImageEnhance
     """
     @staticmethod
-    def set_transform_type(fun, name="name", min=0.0, max=2.0, default=1.0, step=0.5):
+    def set_transform_type(fun, name="name", min=0.0, max=2.0, default=1.0, step=0.1):
         """
         Returns a dictionary item for the _transform attribute
         """
@@ -55,8 +55,8 @@ class TransformWrapper:
         e = img
         for name, value in transform.items():
             e = self.apply_single_transform(e, name, float(value))
-            e.save(img.filename)
         return e
+
 
 
 

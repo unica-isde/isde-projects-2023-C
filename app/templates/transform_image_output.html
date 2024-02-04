@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 
-
 {% block content %}
-    <h4>
-            Transformed Image:
-    </h4>
-    <div class="mh-80">
-        <img class="thumbnail"
-             src="{{ 'static/imagenet_subset/'+image_id }} "
-             alt={{ image_id }}/>
-    </div>
+    <br style="margin-top:1cm">
+        <h4>
+                Transformed image {{ image_id }}:
+        </h4>
+        <div class="mh-80">
+            <img class="thumbnail"
+                 src="{{ 'data:image/JPEG;base64,'+ image }} "
+                 alt={{ image_id }}/>
+        </div>
 {% endblock %}
 
 
