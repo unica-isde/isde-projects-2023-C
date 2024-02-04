@@ -23,7 +23,7 @@ class TransformWrapper:
 
     def __init__(self):
         self._transforms = {}
-        self._transforms.update(self.set_transform_type(ImageEnhance.Color, "color", -100, 100, 5))
+        self._transforms.update(self.set_transform_type(ImageEnhance.Color, "color", min=-100, max=100, step=5))
         self._transforms.update(self.set_transform_type(ImageEnhance.Contrast, "contrast"))
         self._transforms.update(self.set_transform_type(ImageEnhance.Brightness, "brightness"))
         self._transforms.update(self.set_transform_type(ImageEnhance.Sharpness, "sharpness"))
