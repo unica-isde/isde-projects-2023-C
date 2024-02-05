@@ -1,7 +1,8 @@
 
 $(document).ready(function () {
     var scripts = document.getElementById('makeHistogram');
-    makeGraph();
+    var image = document.getElementById("image");
+    image.onload = makeGraph;
 });
 
 function makeGraph() {
