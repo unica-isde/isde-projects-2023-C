@@ -140,7 +140,7 @@ async def transform_image(request: Request):
         image_b64 = base64.b64encode(buff.getvalue())
         image_b64 = image_b64.decode("utf-8")
 
-        response = templates.TemplateResponse(
+        return templates.TemplateResponse(
             "transform_image_output.html",
             {
                 "request": request,
@@ -148,7 +148,4 @@ async def transform_image(request: Request):
                 "image": image_b64
             },
         )
-
-        response.headers["cache-control"] = "no-store"
-        return response
 
