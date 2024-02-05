@@ -2,11 +2,13 @@
 
 {% block content %}
 
-    <h1>Select image and transform it</h1>
+    <br style="margin-top:1cm">
+    <h4>Select image and transform it</h4>
     <form method="post" novalidate>
-        <h4>
+
+        <h5>
             Image:
-        </h4>
+        </h5>
         <p>
             <select name="image_id">
                 {% for image in images %}
@@ -14,9 +16,9 @@
                 {% endfor %}
               </select>
         </p>
-        <h4>
+        <h5>
             Transformations:
-        </h4>
+        </h5>
         <p>
             {%  for name, value in transforms.items() %}
                 <label for="{{name}}">{{ name }}</label>
