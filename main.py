@@ -101,16 +101,18 @@ async def request_classification_upload(request: Request):
             {"request": request, "models": Configuration.models, "errors":form.errors},
         )
 
-@app.get("/histogram")
+@app.get("/histogram")# ADDED
 def create_histogram(request: Request):
+    """ Page in which an image can be selected for its histogram generation. """
     return templates.TemplateResponse(
         "histogram_select.html",
         {"request": request, "images": list_images()},
     )
 
 
-@app.post("/histogram")
+@app.post("/histogram") # ADDED
 async def request_histogram(request: Request):
+    """ Page in which the histogram of the selected image is generated and showed. """
     form = ClassificationForm(request)
     await form.load_data()
     image_id = form.image_id
