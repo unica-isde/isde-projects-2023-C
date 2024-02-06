@@ -32,20 +32,36 @@
                 <a class="btn btn-primary" href="/classifications" role="button">Back</a>
 
     <style>
-        .Download_Buttons {
-            position: relative;
-            max-width: 100%;
-            height: auto;
-            display: block;
-            margin: 20px auto;
-        }
-
+      .download-form {
+        position: relative;
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 20px auto;
+      }
     </style>
-            <!-- Buttons for the third Issue -->
-           <div class="Download_Buttons">
-                 <a class="btn btn-secondary" href="/download_plot/{{ image_id }}?classification_scores={{ classification_scores }}" download>Download Plot</a>
-                 <a class="btn btn-secondary" href="/download_results/{{ image_id }}?classification_scores={{ classification_scores }}" download>Download Results</a>
-                </div>
+
+    <script>
+      function downloadFile(url) {
+          const link = document.createElement('a');
+          link.href = url;
+        link.download = '';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    </script>
+
+    <form action="/download_plot/{{ image_id }}" method="get" class="download-form" onsubmit="downloadFile(this.action + '?' + new URLSearchParams(new FormData(this)).toString()); return false;">
+      <input type="hidden" name="classification_scores" value="{{ classification_scores }}">
+      <button type="submit" class="btn btn-secondary">Download Plot</button>
+    </form>
+
+   <form action="/download_results/{{ image_id }}" method="get" class="download-form">
+      <input type="hidden" name="classification_scores" value="{{ classification_scores }}">
+      <button type="submit" class="btn btn-secondary">Download Results</button>
+   </form>
+
         </div>
     </div>
     <script src="{{ "static/graph.js" }}" id="makeGraph" classification_scores="{{classification_scores}}"></script>

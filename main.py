@@ -131,14 +131,18 @@ async def request_histogram(request: Request):
 
 @app.get("/download_results/{image_id}")
 def download_results(classification_scores: str):
+    """
+    Takes classification scores in string format
+    and returns a StreamingResponse to allow downloading the result as an attached JSON file.
+
+    """
+
     classification_scores_dict = json.loads(classification_scores)
     json_content = json.dumps(classification_scores_dict, indent=4)
 
-    # Json file streaming
     def generate():
         yield json_content.encode()
 
-    # Return a StreamingResponse
     return StreamingResponse(
         generate(),
         media_type="application/json",
@@ -147,10 +151,13 @@ def download_results(classification_scores: str):
 
 
 @app.get("/download_plot/{image_id}")
-async def download_results(classification_scores: str):
+async def download_plot(classification_scores: str):
+    """
+    Creates a graph based on the scores and returns it as a downloadable PNG image using a StreamingResponse.
+    """
+
     classification_scores_dict = json.loads(classification_scores)
 
-    # Pick up the values for the plot
     categories = [item[0] for item in classification_scores_dict]
     values = [item[1] for item in classification_scores_dict]
 
@@ -163,7 +170,7 @@ async def download_results(classification_scores: str):
     plot.title('Output Scores')
     plot.margins(y=0.01)
     plot.tight_layout()
-    plot.grid(True)
+    plot.grid(True, linewidth=0.1)
 
     # Save graph as png
     image_stream = io.BytesIO()
@@ -171,7 +178,6 @@ async def download_results(classification_scores: str):
     image_stream.seek(0)
     plot.close()
 
-    # Return a StreamingResponse
     return StreamingResponse(io.BytesIO(image_stream.read()), media_type="image/png")
 
 
