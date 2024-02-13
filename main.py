@@ -175,7 +175,7 @@ async def download_plot(classification_scores: str):
     image_stream = io.BytesIO()
     plot.savefig(image_stream, format='png')
     image_stream.seek(0)
-    plot.close()
+    plot.close('all')
 
     return StreamingResponse(io.BytesIO(image_stream.read()), media_type="image/png")
 
