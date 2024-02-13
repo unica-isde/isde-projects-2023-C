@@ -134,12 +134,12 @@ def download_results(classification_scores: str):
     """
     Takes classification scores in string format
     and returns a StreamingResponse to allow downloading the result as an attached JSON file.
-
     """
 
     classification_scores_dict = json.loads(classification_scores)
     json_content = json.dumps(classification_scores_dict, indent=4)
 
+    # Yield the JSON content as bytes
     def generate():
         yield json_content.encode()
 
@@ -157,7 +157,6 @@ async def download_plot(classification_scores: str):
     """
 
     classification_scores_dict = json.loads(classification_scores)
-
     categories = [item[0] for item in classification_scores_dict]
     values = [item[1] for item in classification_scores_dict]
 
