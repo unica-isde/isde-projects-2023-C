@@ -7,3 +7,5 @@ redis
 rq
 python-multipart
 matplotlib
+python-magic
+python-magic-bin

@@ -1,10 +1,12 @@
 from typing import List
 
+import PIL
+import magic
+
 import starlette.datastructures
 from fastapi import Request, UploadFile
 
 from app.config import Configuration
-from app.utils import save_image
 
 
 # https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
@@ -22,26 +24,26 @@ class ClassificationFormUpload:
         self.model_id = form.get("model_id")
         self.image_id = self.image_file.filename
 
-    def is_valid(self):
+    async def is_valid(self):
         # FastAPI bug https://github.com/tiangolo/fastapi/discussions/9705
         if not self.image_file or not isinstance(self.image_file, starlette.datastructures.UploadFile) \
                 or not self.image_file.filename.endswith(".JPEG"):  # utils.list_images() accepts only '.JPEG' extension
             self.errors.append("A valid .JPEG image is required (check file extension, it must be uppercase too!)")
+
+        try:
+            await self.image_file.seek(0)
+            if 'JPEG image' not in magic.from_buffer(await self.image_file.read(2048)):
+                self.errors.append("You inserted a file which is not a valid JPEG image!")
+        except PIL.UnidentifiedImageError:
+            self.errors.append("We couldn't recognize the file you sent! Are you sure it was a JPEG image?")
+
         if not self.image_id or not isinstance(self.image_id, str):
             self.errors.append("A valid image filename is required")
+
         if not self.model_id or not isinstance(self.model_id, str):
             self.errors.append("A valid model id is required")
+
         if not self.errors:
             return True
+        # Deny default
         return False
-
-    async def save_image(self):
-
-        # save the image
-        # can't check if it already exists in the best way, we would need to modify the "prepare image file"
-        # in order to calculate all the pre-existing images hashes, but we can't:
-        # <<The old functionalities should be preserved, this is an additional feature.>>
-        # We can check if filename already exists, but it would negatively impact performance with a big number of
-        # pre-existing images.
-        # We can just re-write the old image for now.
-        await save_image(self.image_file)

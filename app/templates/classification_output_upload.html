@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <style>
+        .large-front-thumbnail {
+            position: relative;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+    </style>
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <img class="large-front-thumbnail"
+                     src="{{ 'data:image/JPEG;base64,'+ image }}"
+                     alt={{ image_id }}/>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <div class="row">
+                    <canvas id="classificationOutput" style="width: 50%; margin: auto; padding: 20px;"></canvas>
+                    <div class="align-items-center">
+                        <h2 id="waitText"></h2>
+                        </div>
+                    </div>
+                </div>
+                <a class="btn btn-primary" href="/classifications" role="button">Back</a>
+
+    <style>
+      .download-form {
+        position: relative;
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 10px auto;
+      }
+    </style>
+
+    <script>
+      function downloadFile(url) {
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = '';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+      }
+    </script>
+
+    <form action="/download_plot/{{ image_id }}" method="get" class="download-form" id="downloadForm">
+      <input type="hidden" name="classification_scores" value="{{ classification_scores }}">
+      <button type="submit" class="btn btn-dark">Download Plot</button>
+    </form>
+
+    <script>
+        document.getElementById('downloadForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const form = event.target;
+        const formDataString = Array.from(new FormData(form))
+          .map(pair => `${encodeURIComponent(pair[0])}=${encodeURIComponent((pair[1]).toString())}`)
+          .join('&');
+        downloadFile(form.action + '?' + formDataString);
+        });
+    </script>
+
+   <form action="/download_results/{{ image_id }}" method="get" class="download-form">
+      <input type="hidden" name="classification_scores" value="{{ classification_scores }}">
+      <button type="submit" class="btn btn-dark">Download Results</button>
+   </form>
+
+        </div>
+    </div>
+    <script src="{{ "static/graph.js" }}" id="makeGraph" classification_scores="{{classification_scores}}"></script>
+
+{% endblock %}

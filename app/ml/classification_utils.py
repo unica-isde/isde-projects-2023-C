@@ -12,7 +12,6 @@ from torchvision import transforms
 
 from app.config import Configuration
 
-
 conf = Configuration()
 
 
@@ -47,11 +46,12 @@ def get_model(model_id):
         raise ImportError
 
 
-def classify_image(model_id, img_id):
+# function created to respect DRY principle
+def classify(model_id, img):
     """Returns the top-5 classification score output from the
-    model specified in model_id when it is fed with the
-    image corresponding to img_id."""
-    img = fetch_image(img_id)
+        model specified in model_id when it is fed with the
+        image stored temporarily in memory."""
+
     model = get_model(model_id)
     model.eval()
     transform = transforms.Compose(
@@ -83,3 +83,11 @@ def classify_image(model_id, img_id):
 
     img.close()
     return output
+
+
+def classify_image(model_id, img_id):
+    """Returns the top-5 classification score output from the
+    model specified in model_id when it is fed with the
+    image corresponding to img_id."""
+    img = fetch_image(img_id)
+    return classify(model_id, img)

@@ -2,7 +2,10 @@ import io
 import json
 import matplotlib.pyplot as plot
 from typing import Dict, List
-from fastapi import FastAPI, Request, File, UploadFile
+
+
+from PIL import Image
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -10,11 +13,11 @@ from app.config import Configuration
 from app.forms.classification_form import ClassificationForm
 from app.forms.classification_form_upload import ClassificationFormUpload
 from app.forms.transform_image_form import TransformImageForm
-from app.ml.classification_utils import classify_image, fetch_image
+from app.ml.classification_utils import classify_image, fetch_image, classify
 from app.utils import list_images
 from app.image_transform import TransformWrapper
 from io import BytesIO
-import base64, os
+import base64
 
 app = FastAPI()
 config = Configuration()
@@ -85,18 +88,33 @@ async def request_classification_upload(request: Request):
     form = ClassificationFormUpload(request)
     await form.load_data()
 
-    if form.is_valid():
+    if await form.is_valid():
         model_id = form.model_id
         image_id = form.image_id
 
-        await form.save_image()  # save image before classifying it!
+        # UploadFile, despite its name, is not a file-like object (it doesn't have the tell() method!),
+        # so it can't be used to directly create an Image object.
+        # We need to convert it into a file-like object first, like BytesIO!
+        buff = io.BytesIO()
+        await form.image_file.seek(0)
+        buff.write(await form.image_file.read())  # writes all content to buffer
+        await form.image_file.close()
 
-        classification_scores = classify_image(model_id=model_id, img_id=image_id)
+        img = Image.open(buff)
+
+        classification_scores = classify(model_id=model_id, img=img)
+
+        # Since this is a one-time classification we don't store the image permanently,
+        # so we need to pass the image as base64 encoded data to the classification output page.
+        image_b64 = base64.b64encode(buff.getvalue())
+        image_b64 = image_b64.decode("utf-8")
+
         return templates.TemplateResponse(
-            "classification_output.html",
+            "classification_output_upload.html",
             {
                 "request": request,
                 "image_id": image_id,
+                "image": image_b64,
                 "classification_scores": json.dumps(classification_scores),
             },
         )
