@@ -11,6 +11,8 @@ from app.config import Configuration
 
 # https://fastapi.tiangolo.com/tutorial/request-forms-and-files/
 class ClassificationFormUpload:
+    _MAGIC_BYTES_TO_READ = 2048  # magic package documentation on GitHub suggests reading at least 2048 bytes.
+
     def __init__(self, request: Request) -> None:
         self.request: Request = request
         self.errors: List = []
@@ -32,7 +34,9 @@ class ClassificationFormUpload:
 
         try:
             await self.image_file.seek(0)
-            if 'JPEG image' not in magic.from_buffer(await self.image_file.read(2048)):
+            if 'JPEG image' not in magic.from_buffer(
+                    await self.image_file.read(ClassificationFormUpload._MAGIC_BYTES_TO_READ)
+            ):
                 self.errors.append("You inserted a file which is not a valid JPEG image!")
         except PIL.UnidentifiedImageError:
             self.errors.append("We couldn't recognize the file you sent! Are you sure it was a JPEG image?")
