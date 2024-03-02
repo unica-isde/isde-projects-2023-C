@@ -38,7 +38,7 @@ class ClassificationFormUpload:
                     await self.image_file.read(ClassificationFormUpload._MAGIC_BYTES_TO_READ)
             ):
                 self.errors.append("You inserted a file which is not a valid JPEG image!")
-        except PIL.UnidentifiedImageError:
+        except magic.MagicException:
             self.errors.append("We couldn't recognize the file you sent! Are you sure it was a JPEG image?")
 
         if not self.image_id or not isinstance(self.image_id, str):
@@ -50,4 +50,9 @@ class ClassificationFormUpload:
         if not self.errors:
             return True
         # Deny default
+        # If any error happens, get rid of the image_file without waiting for garbage collection
+        await self.image_file.close()   # This should close its internal SpooledTemporaryFile,
+                                        # effectively eliminating it from memory in case an error occurs.
+                                        # We just explicitly insert this line for readability,
+                                        # But it should get executed by python's garbage collector too!
         return False

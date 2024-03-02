@@ -1,5 +1,7 @@
 import io
 import json
+
+import PIL
 import matplotlib.pyplot as plot
 from typing import Dict, List
 
@@ -92,32 +94,49 @@ async def request_classification_upload(request: Request):
         model_id = form.model_id
         image_id = form.image_id
 
+        # Side note: we could use the internal .file attribute (SpooledTemporaryFile) directly (without io.BytesIO)
+        # inside form.image_file, but there is a backward-compatibility problem... In all versions prior to python 3.11
+        # it does not implement the buffer protocol, so it can't be used with base64.b64encode function.
+        # https://docs.python.org/3.11/whatsnew/3.11.html#tempfile
+        # https://stackoverflow.com/questions/47160211/why-doesnt-tempfile-spooledtemporaryfile-implement-readable-writable-seekable
+
         # UploadFile, despite its name, is not a file-like object (it doesn't have the tell() method!),
         # so it can't be used to directly create an Image object.
-        # We need to convert it into a file-like object first, like BytesIO!
+        # We need to convert it into a file-like byte object first, like BytesIO!
         buff = io.BytesIO()
         await form.image_file.seek(0)
         buff.write(await form.image_file.read())  # writes all content to buffer
         await form.image_file.close()
 
-        img = Image.open(buff)
+        try:
+            img = Image.open(buff)
+        except PIL.UnidentifiedImageError:
+            form.errors.append("We couldn't recognize the image you sent! Are you sure it was a JPEG image?")
+        else:
+            classification_scores = classify(model_id=model_id, img=img)
 
-        classification_scores = classify(model_id=model_id, img=img)
+            # Since this is a one-time classification we don't store the image permanently,
+            # so we need to pass the image as base64 encoded data to the classification output page.
+            image_b64 = base64.b64encode(buff.getvalue())
+            image_b64 = image_b64.decode("utf-8")
 
-        # Since this is a one-time classification we don't store the image permanently,
-        # so we need to pass the image as base64 encoded data to the classification output page.
-        image_b64 = base64.b64encode(buff.getvalue())
-        image_b64 = image_b64.decode("utf-8")
+            return templates.TemplateResponse(
+                "classification_output_upload.html",
+                {
+                    "request": request,
+                    "image_id": image_id,
+                    "image": image_b64,
+                    "classification_scores": json.dumps(classification_scores),
+                },
+            )
+        finally:
+            buff.close()
 
         return templates.TemplateResponse(
-            "classification_output_upload.html",
-            {
-                "request": request,
-                "image_id": image_id,
-                "image": image_b64,
-                "classification_scores": json.dumps(classification_scores),
-            },
+            "classification_upload.html",
+            {"request": request, "models": Configuration.models, "errors": form.errors},
         )
+
     else:
         return templates.TemplateResponse(
             "classification_upload.html",
