@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <br style="margin-top:1cm">
+    <h4>Select image and transform it</h4>
+    <form method="post" novalidate>
+
+        <h5>
+            Image:
+        </h5>
+        <p>
+        <label>Select:
+            <select name="image_id">
+                {% for image in images %}
+                  <option value="{{ image }}" SELECTED>{{ image }}</option>
+                {% endfor %}
+              </select>
+        </label>
+        </p>
+        <h5>
+            Transformations:
+        </h5>
+        <p>
+            {%  for name, value in transforms.items() %}
+                <label for="{{name}}">{{ name }}
+                    <input type="range" name="{{ name }}" id="{{ name }}" min="{{ value.min }}" max="{{ value.max }}" value="{{ value.default }}" step="{{ value.step }}">
+                </label>
+                <br>
+            {% endfor %}
+
+        </p>
+
+        <button type="submit" class="btn btn-dark mb-2">Submit</button>
+    </form>
+{% endblock %}

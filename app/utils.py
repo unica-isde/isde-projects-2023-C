@@ -1,5 +1,7 @@
 import os
 
+from fastapi import UploadFile
+
 from app.config import Configuration
 
 conf = Configuration()
